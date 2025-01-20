@@ -1,1 +1,1 @@
-public record Coordinate(int row, int column) {}
+public record Coordinate(int column, int row) {}

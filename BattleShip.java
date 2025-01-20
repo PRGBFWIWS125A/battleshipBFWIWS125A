@@ -59,4 +59,37 @@ public class BattleShip{
         return new Coordinate(input.toUpperCase().charAt(0) - 65, Integer.parseInt(input.substring(1)) - 1);
     }
 
+    static void showField(final Field field, final boolean showShips) {
+        switch (field) {
+        case SHIP:
+            System.out.print(showShips ? "O" : " ");
+            break;
+        case SHIP_HIT:
+            System.out.print("*");
+            break;
+        case WATER_HIT:
+            System.out.print("X");
+            break;
+        case WATER:
+        default:
+            System.out.print(" ");
+        }
+    }
+
+    static void placeShip(final Coordinate start, final Coordinate end, final Field[][] field) {
+        if (start.column() == end.column()) {
+            for (int row = Math.min(start.row(), end.row()); row <= Math.max(start.row(), end.row()); row++) {
+                field[start.column()][row] = Field.SHIP;
+            }
+        } else {
+            for (
+                int column = Math.min(start.column(), end.column());
+                column <= Math.max(start.column(), end.column());
+                column++
+            ) {
+                field[column][start.row()] = Field.SHIP;
+            }
+        }
+    }
+
 }
