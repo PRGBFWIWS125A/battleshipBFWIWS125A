@@ -164,4 +164,17 @@ public class BattleShip{
         }
         return true;
     }
+    
+    static int countHits(final Field[][] field) {
+        int result = 0;
+        for (int column = 0; column < SIZE; column++) {
+            for (int row = 0; row < SIZE; row++) {
+                if (field[column][row] == Field.SHIP_HIT) {
+                    result++;
+                }
+            }
+        }
+        return result;
+    }
+
 }
