@@ -176,5 +176,46 @@ public class BattleShip{
         }
         return result;
     }
+    static void shot (final Coordinate shot, final Field[][] field) {}
+    static void fillWaterHits (final Coordinate shot, final Field[][] field) {
+        int row = shot.row();
+        int col = shot.column();
+        while (col < SIZE && field[col][row] == Field.SHIP_HIT) {
+            col++;
+        }
+        if (field[col][row] != Field.SHIP_HIT) {
+            col--;
+        }
+        int maxcol = col;
+        while (col >= 0 && field[col][row] == Field.SHIP_HIT) {
+            col--;
+        }
+        if (field[col][row] != Field.SHIP_HIT) {
+            col++;
+        }
+        int mincol = col;
+        while (row < SIZE && field[col][row] == Field.SHIP_HIT) {
+            row++;
+        }
+        if (field[col][row] != Field.SHIP_HIT) {
+            row--;
+        }
+        int maxrow = row;
+        while (row >= 0 && field[col][row] == Field.SHIP_HIT) {
+            row--;
+        }
+        if (field[col][row] != Field.SHIP_HIT) {
+            row++;
+        }
+        int minrow = row;
+        Coordinate start = new Coordinate (mincol, minrow);
+        Coordinate end = new Coordinate(maxcol, maxrow);
+        for (col = getMinSurroundingColumn (start, end); col <= getMaxSurroundingColumn (start, end); col++) {
+            for (row = getMinSurroundingRow (start, end); row <= getMaxSurroundingRow (start, end); row++) {
+                shot (new Coordinate (col, row),field);
+            }
+        }
+    }
+
 
 }
