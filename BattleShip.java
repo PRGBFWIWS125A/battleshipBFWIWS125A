@@ -92,4 +92,20 @@ public class BattleShip{
         }
     }
 
+    static void showRow(final int row, final Field[][] ownField, final Field[][] otherField) {
+        showRowNumber(row);
+        System.out.print(" |");
+        for (int col = 0; col < SIZE; col++) {
+            showField(ownField[col][row], true);
+            System.out.print("|");
+        }
+        System.out.print("   ");
+        showRowNumber(row);
+        System.out.print(" |");
+        for (int col = 0; col < SIZE; col++) {
+            showField(otherField[col][row], false);
+            System.out.print("|");
+        }
+        System.out.println();
+    }
 }
