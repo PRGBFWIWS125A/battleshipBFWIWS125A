@@ -108,4 +108,14 @@ public class BattleShip{
         }
         System.out.println();
     }
+    static void showFields(final Field[][] ownfield, final Field[][] otherfield) {
+
+        System.out.println("    A B C D E F G H I J        A B C D E F G H I J");
+        showSeparatorLine();
+        for (int row = 0 ;row< SIZE ;row++) {
+            showRow(row, ownfield, otherfield);
+            showSeparatorLine();
+        }
+        System.out.println();
+    }
 }
