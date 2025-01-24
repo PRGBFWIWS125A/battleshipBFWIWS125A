@@ -76,6 +76,14 @@ public class BattleShip{
         }
     }
 
+    static void setAllWater(final Field[][] field) {
+        for (int col = 0; col < SIZE; col++) {
+            for (int row = 0; row < SIZE; row++) {
+                field[col][row] = Field.WATER;
+            }
+        }
+    }
+
     static void placeShip(final Coordinate start, final Coordinate end, final Field[][] field) {
         if (start.column() == end.column()) {
             for (int row = Math.min(start.row(), end.row()); row <= Math.max(start.row(), end.row()); row++) {
