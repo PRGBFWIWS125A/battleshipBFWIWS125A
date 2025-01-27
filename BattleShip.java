@@ -176,7 +176,7 @@ public class BattleShip{
         }
         return result;
     }
-    static void shot (final Coordinate shot, final Field[][] field) {}
+
     static void fillWaterHits (final Coordinate shot, final Field[][] field) {
         int row = shot.row();
         int col = shot.column();
@@ -217,5 +217,39 @@ public class BattleShip{
         }
     }
 
+    static void shot(final Coordinate shot, final Field[][] field) {
+        switch (field[shot.column()][shot.row()]) {
+        case SHIP:
+            field[shot.column()][shot.row()] = Field.SHIP_HIT;
+            if (BattleShip.shipSunk(shot, field)) {
+                BattleShip.fillWaterHits(shot, field);
+            }
+            break;
+        case WATER:
+            field[shot.column()][shot.row()] = Field.WATER_HIT;
+            break;
+        default:
+            // do nothing
+        }
+    }
+
+    static boolean noConflict(final Coordinate start, final Coordinate end, final Field[][] field) {
+        for (
+            int column = BattleShip.getMinSurroundingColumn(start, end);
+            column <= BattleShip.getMaxSurroundingColumn(start, end);
+            column++
+        ) {
+            for (
+                int row = BattleShip.getMinSurroundingRow(start, end);
+                row <= BattleShip.getMaxSurroundingRow(start, end);
+                row++
+            ) {
+                if (field[column][row] != Field.WATER) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
 }
