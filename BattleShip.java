@@ -270,4 +270,34 @@ public class BattleShip{
         }
         return toCoordinate(input);
     }
+
+    static Coordinate getRandomUnshotCoordinate(final Field[][] field) {
+        int count = 0;
+
+        for (int column = 0; column < SIZE; column++) {
+            for (int row = 0; row < SIZE; row++) {
+                switch (field[column][row]) {
+                    case SHIP:
+                    case WATER:
+                      count++;
+                }
+            }
+        }
+
+        Coordinate[] candidates = new Coordinate[count];
+        count = 0;
+
+        for (int column = 0; column < SIZE; column++) {
+            for (int row = 0; row < SIZE; row++) {
+                switch (field[column][row]) {
+                    case SHIP:
+                    case WATER:
+                        candidates[count] = new Coordinate(column, row);
+                        count++;
+                }
+            }
+        }
+
+        return candidates[Utility.getRandomInt(count)];
+    }
 }
