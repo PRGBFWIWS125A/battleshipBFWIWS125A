@@ -283,7 +283,9 @@ public class BattleShip{
                 }
             }
         }
-
+        if (count == 0) {
+            throw new IllegalStateException();
+        }
         Coordinate[] candidates = new Coordinate[count];
         count = 0;
 
