@@ -2,14 +2,30 @@ import java.io.*;
 
 public class BattleShip {
 
+    static final int ALL_HIT = 14;
+
     static final String ENTER_SHIP_COORDINATE_PROMPT = "Geben Sie die %skoordinaten für ein Schiff der Länge %d ein: ";
 
-    static int SIZE = 10;
+    static final int SIZE = 10;
+
+    public static void main(final String[] args) {
+        System.out.println();
+        final Field[][] otherField = BattleShip.initOtherField();
+        final Field[][] ownField = BattleShip.initOwnField(otherField);
+        while (!BattleShip.endCondition(ownField, otherField)) {
+            BattleShip.turn(ownField, otherField);
+        }
+        BattleShip.outputWinner(ownField, otherField);
+    }
+
+    static boolean allHit(final Field[][] field) {
+        return BattleShip.countHits(field) == BattleShip.ALL_HIT;
+    }
 
     static int countHits(final Field[][] field) {
         int result = 0;
-        for (int column = 0; column < BattleShip.SIZE; column++) {
-            for (int row = 0; row < BattleShip.SIZE; row++) {
+        for (int column = 0; column < SIZE; column++) {
+            for (int row = 0; row < SIZE; row++) {
                 if (field[column][row] == Field.SHIP_HIT) {
                     result++;
                 }
@@ -22,50 +38,30 @@ public class BattleShip {
         return Math.abs(start.column() - end.column()) + Math.abs(start.row() - end.row());
     }
 
+    static boolean endCondition(final Field[][] ownField, final Field[][] otherField) {
+        return BattleShip.allHit(ownField) || BattleShip.allHit(otherField);
+    }
+
     static void fillWaterHits(final Coordinate shot, final Field[][] field) {
-        int row = shot.row();
-        int col = shot.column();
-        while (col < BattleShip.SIZE && field[col][row] == Field.SHIP_HIT) {
-            col++;
+        int columnMin = shot.column();
+        while (columnMin > 0 && field[columnMin][shot.row()] == Field.SHIP_HIT) {
+            columnMin--;
         }
-        if (field[col][row] != Field.SHIP_HIT) {
-            col--;
+        int columnMax = shot.column();
+        while (columnMax < BattleShip.SIZE - 1 && field[columnMax][shot.row()] == Field.SHIP_HIT) {
+            columnMax++;
         }
-        final int maxcol = col;
-        while (col >= 0 && field[col][row] == Field.SHIP_HIT) {
-            col--;
+        int rowMin = shot.row();
+        while (rowMin > 0 && field[shot.column()][rowMin] == Field.SHIP_HIT) {
+            rowMin--;
         }
-        if (field[col][row] != Field.SHIP_HIT) {
-            col++;
+        int rowMax = shot.row();
+        while (rowMax < BattleShip.SIZE - 1 && field[shot.column()][rowMax] == Field.SHIP_HIT) {
+            rowMax++;
         }
-        final int mincol = col;
-        while (row < BattleShip.SIZE && field[col][row] == Field.SHIP_HIT) {
-            row++;
-        }
-        if (field[col][row] != Field.SHIP_HIT) {
-            row--;
-        }
-        final int maxrow = row;
-        while (row >= 0 && field[col][row] == Field.SHIP_HIT) {
-            row--;
-        }
-        if (field[col][row] != Field.SHIP_HIT) {
-            row++;
-        }
-        final int minrow = row;
-        final Coordinate start = new Coordinate(mincol, minrow);
-        final Coordinate end = new Coordinate(maxcol, maxrow);
-        for (
-            col = BattleShip.getMinSurroundingColumn(start, end);
-            col <= BattleShip.getMaxSurroundingColumn(start, end);
-            col++
-        ) {
-            for (
-                row = BattleShip.getMinSurroundingRow(start, end);
-                row <= BattleShip.getMaxSurroundingRow(start, end);
-                row++
-            ) {
-                BattleShip.shot(new Coordinate(col, row), field);
+        for (int column = columnMin; column <= columnMax; column++) {
+            for (int row = rowMin; row <= rowMax; row++) {
+                BattleShip.shot(new Coordinate(column, row), field);
             }
         }
     }
@@ -75,19 +71,19 @@ public class BattleShip {
     }
 
     static int getMaxSurroundingColumn(final Coordinate start, final Coordinate end) {
-        return Math.min((Math.max(start.column(), end.column()) + 1), BattleShip.SIZE - 1);
+        return Math.min(BattleShip.SIZE - 1, Math.max(start.column(), end.column()) + 1);
     }
 
     static int getMaxSurroundingRow(final Coordinate start, final Coordinate end) {
-        return Math.min((Math.max(start.row(), end.row()) + 1), BattleShip.SIZE - 1);
+        return Math.min(BattleShip.SIZE - 1, Math.max(start.row(), end.row()) + 1);
     }
 
     static int getMinSurroundingColumn(final Coordinate start, final Coordinate end) {
-        return Math.max((Math.min(start.column(), end.column()) - 1), 0);
+        return Math.max(0, Math.min(start.column(), end.column()) - 1);
     }
 
     static int getMinSurroundingRow(final Coordinate start, final Coordinate end) {
-        return Math.max((Math.min(start.row(), end.row()) - 1), 0);
+        return Math.max(0, Math.min(start.row(), end.row()) - 1);
     }
 
     static Coordinate getRandomCoordinate() {
@@ -131,36 +127,61 @@ public class BattleShip {
     }
 
     static Coordinate getRandomUnshotCoordinate(final Field[][] field) {
-        int count = 0;
+        int choices = 0;
         for (int column = 0; column < BattleShip.SIZE; column++) {
             for (int row = 0; row < BattleShip.SIZE; row++) {
-                switch (field[column][row]) {
-                case SHIP:
-                case WATER:
-                    count++;
+                if (field[column][row] == Field.WATER || field[column][row] == Field.SHIP) {
+                    choices++;
                 }
             }
         }
-        if (count == 0) {
-            throw new IllegalStateException();
-        }
-        final Coordinate[] candidates = new Coordinate[count];
-        count = 0;
+        int choice = Utility.getRandomInt(choices);
         for (int column = 0; column < BattleShip.SIZE; column++) {
             for (int row = 0; row < BattleShip.SIZE; row++) {
-                switch (field[column][row]) {
-                case SHIP:
-                case WATER:
-                    candidates[count] = new Coordinate(column, row);
-                    count++;
+                if (field[column][row] == Field.WATER || field[column][row] == Field.SHIP) {
+                    choice--;
+                    if (choice <= 0) {
+                        return new Coordinate(column, row);
+                    }
                 }
             }
         }
-        return candidates[Utility.getRandomInt(count)];
+        throw new IllegalStateException("No unshot field found and not won!");
     }
 
     static String getStartCoordinatePrompt(final int length) {
         return String.format(BattleShip.ENTER_SHIP_COORDINATE_PROMPT, "Start", length);
+    }
+
+    static Field[][] initOtherField() {
+        final Field[][] otherField = new Field[BattleShip.SIZE][BattleShip.SIZE];
+        BattleShip.setAllWater(otherField);
+        for (int length = 5; length > 1; length--) {
+            final Coordinate start = BattleShip.getRandomCoordinate();
+            final Coordinate end = BattleShip.getRandomEndCoordinate(start, length - 1);
+            if (BattleShip.validPosition(start, end, length, otherField)) {
+                BattleShip.placeShip(start, end, otherField);
+            } else {
+                length++;
+            }
+        }
+        return otherField;
+    }
+
+    static Field[][] initOwnField(final Field[][] otherField) {
+        final Field[][] ownField = new Field[BattleShip.SIZE][BattleShip.SIZE];
+        BattleShip.setAllWater(ownField);
+        for (int length = 5; length > 1; length--) {
+            BattleShip.showFields(ownField, otherField);
+            final Coordinate start = BattleShip.readStartCoordinate(length);
+            final Coordinate end = BattleShip.readEndCoordinate(length);
+            if (BattleShip.validPosition(start, end, length, ownField)) {
+                BattleShip.placeShip(start, end, ownField);
+            } else {
+                length++;
+            }
+        }
+        return ownField;
     }
 
     static boolean isValidCoordinate(final String input) {
@@ -190,6 +211,15 @@ public class BattleShip {
         return start.column() == end.column() || start.row() == end.row();
     }
 
+    static void outputWinner(final Field[][] ownField, final Field[][] otherField) {
+        BattleShip.showFields(ownField, otherField);
+        if (BattleShip.allHit(otherField)) {
+            System.out.println("Du hast gewonnen!");
+        } else {
+            System.out.println("Der Computer hat gewonnen!");
+        }
+    }
+
     static void placeShip(final Coordinate start, final Coordinate end, final Field[][] field) {
         if (start.column() == end.column()) {
             for (int row = Math.min(start.row(), end.row()); row <= Math.max(start.row(), end.row()); row++) {
@@ -208,62 +238,63 @@ public class BattleShip {
 
     static Coordinate readCoordinate(final String prompt) {
         String input = "";
-        while (!input.equals("exit") && !BattleShip.isValidCoordinate(input)) {
-            System.out.println(prompt);
+        while (!BattleShip.isValidCoordinate(input)) {
+            System.out.print(prompt);
             try {
                 input = Utility.readStringFromConsole();
             } catch (final IOException e) {
-                // Do nothing
+                input = "";
             }
-        }
-        if (input.equals("exit")) {
-            System.exit(0);
+            if ("exit".equals(input)) {
+                System.exit(0);
+            }
         }
         return BattleShip.toCoordinate(input);
     }
 
+    static Coordinate readEndCoordinate(final int length) {
+        return BattleShip.readCoordinate(BattleShip.getEndCoordinatePrompt(length));
+    }
+
+    static Coordinate readStartCoordinate(final int length) {
+        return BattleShip.readCoordinate(BattleShip.getStartCoordinatePrompt(length));
+    }
+
     static void setAllWater(final Field[][] field) {
-        for (int col = 0; col < BattleShip.SIZE; col++) {
-            for (int row = 0; row < BattleShip.SIZE; row++) {
+        for (int col = 0; col < SIZE; col++) {
+            for (int row = 0; row < SIZE; row++) {
                 field[col][row] = Field.WATER;
             }
         }
     }
 
     static boolean shipSunk(final Coordinate shot, final Field[][] field) {
-        if (field[shot.column()][shot.row()] == Field.WATER_HIT) {
+        int column = shot.column();
+        while (column < BattleShip.SIZE - 1 && field[column][shot.row()] == Field.SHIP_HIT) {
+            column++;
+        }
+        if (field[column][shot.row()] == Field.SHIP) {
+            return false;
+        }
+        column = shot.column();
+        while (column > 0 && field[column][shot.row()] == Field.SHIP_HIT) {
+            column--;
+        }
+        if (field[column][shot.row()] == Field.SHIP) {
             return false;
         }
         int row = shot.row();
-        int col = shot.column();
-        while (col < BattleShip.SIZE && field[col][row] == Field.SHIP_HIT) {
-            col++;
-        }
-        if (field[col][row] == Field.SHIP) {
-            return false;
-        }
-        row = shot.row();
-        col = shot.column();
-        while (col >= 0 && field[col][row] == Field.SHIP_HIT) {
-            col--;
-        }
-        if (field[col][row] == Field.SHIP) {
-            return false;
-        }
-        row = shot.row();
-        col = shot.column();
-        while (row < BattleShip.SIZE && field[col][row] == Field.SHIP_HIT) {
+        while (row < BattleShip.SIZE -1 && field[shot.column()][row] == Field.SHIP_HIT) {
             row++;
         }
-        if (field[col][row] == Field.SHIP) {
+        if (field[shot.column()][row] == Field.SHIP) {
             return false;
         }
         row = shot.row();
-        col = shot.column();
-        while (row >= 0 && field[col][row] == Field.SHIP_HIT) {
+        while (row > 0 && field[shot.column()][row] == Field.SHIP_HIT) {
             row--;
         }
-        if (field[col][row] == Field.SHIP) {
+        if (field[shot.column()][row] == Field.SHIP) {
             return false;
         }
         return true;
@@ -302,11 +333,11 @@ public class BattleShip {
         }
     }
 
-    static void showFields(final Field[][] ownfield, final Field[][] otherfield) {
-        System.out.println("    A B C D E F G H I J        A B C D E F G H I J");
+    static void showFields(final Field[][] ownField, final Field[][] otherField) {
+        System.out.println("    A B C D E F G H I J        A B C D E F G H I J ");
         BattleShip.showSeparatorLine();
         for (int row = 0; row < BattleShip.SIZE; row++) {
-            BattleShip.showRow(row, ownfield, otherfield);
+            BattleShip.showRow(row, ownField, otherField);
             BattleShip.showSeparatorLine();
         }
         System.out.println();
@@ -315,15 +346,15 @@ public class BattleShip {
     static void showRow(final int row, final Field[][] ownField, final Field[][] otherField) {
         BattleShip.showRowNumber(row);
         System.out.print(" |");
-        for (int col = 0; col < BattleShip.SIZE; col++) {
-            BattleShip.showField(ownField[col][row], true);
+        for (int column = 0; column < BattleShip.SIZE; column++) {
+            BattleShip.showField(ownField[column][row], true);
             System.out.print("|");
         }
         System.out.print("   ");
         BattleShip.showRowNumber(row);
         System.out.print(" |");
-        for (int col = 0; col < BattleShip.SIZE; col++) {
-            BattleShip.showField(otherField[col][row], false);
+        for (int column = 0; column < BattleShip.SIZE; column++) {
+            BattleShip.showField(otherField[column][row], false);
             System.out.print("|");
         }
         System.out.println();
@@ -342,6 +373,26 @@ public class BattleShip {
 
     static Coordinate toCoordinate(final String input) {
         return new Coordinate(input.toUpperCase().charAt(0) - 65, Integer.parseInt(input.substring(1)) - 1);
+    }
+
+    static void turn(final Field[][] ownField, final Field[][] otherField) {
+        BattleShip.showFields(ownField, otherField);
+        BattleShip.shot(
+            BattleShip.readCoordinate("Geben Sie die Koordinaten Ihres nächsten Schusses ein: "),
+            otherField
+        );
+        BattleShip.shot(BattleShip.getRandomUnshotCoordinate(ownField), ownField);
+    }
+
+    static boolean validPosition(
+        final Coordinate start,
+        final Coordinate end,
+        final int length,
+        final Field[][] field
+    ) {
+        return BattleShip.onOneLine(start, end)
+            && BattleShip.distance(start, end) == length - 1
+            && BattleShip.noConflict(start, end, field);
     }
 
 }
